@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Climate Culture Index 2025 Explorer</title>
+  <link rel="stylesheet" href="app/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1>Climate Culture Index 2025</h1>
+        <span class="header-subtitle">Interactive Explorer</span>
+      </div>
+      <div class="header-right">
+        <a href="cci-25-interactive.html" class="header-link" target="_blank">Full Report</a>
+        <button id="settings-btn" class="icon-btn" title="API Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- API Key Modal -->
+  <div id="api-modal" class="modal">
+    <div class="modal-content">
+      <h2>Welcome to the CCI Explorer</h2>
+      <p>This tool uses Claude AI to answer your questions about the Climate Culture Index data. Enter your Anthropic API key to get started.</p>
+      <div class="input-group">
+        <label for="api-key-input">Anthropic API Key</label>
+        <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
+        <small>Your key is stored only in your browser's local storage and sent directly to Anthropic's API.</small>
+      </div>
+      <div class="modal-actions">
+        <button id="save-key-btn" class="btn-primary">Start Exploring</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chat Area -->
+  <main class="chat-container">
+    <div id="chat-messages" class="chat-messages">
+      <!-- Welcome message -->
+      <div class="message assistant-message">
+        <div class="message-avatar">CCI</div>
+        <div class="message-body">
+          <div class="message-text">
+            <p><strong>Welcome to the Climate Culture Index 2025 Explorer!</strong></p>
+            <p>I can answer questions about US public attitudes toward seven climate-mitigating behaviors, based on a nationally representative survey of 1,828 adults conducted in August 2025.</p>
+            <p>Ask me about:</p>
+            <ul>
+              <li>Adoption rates, intentions, and consideration for any behavior</li>
+              <li>Demographic breakdowns (age, gender, race, political party, education, income)</li>
+              <li>Psychographic segments (Yale SASSY: Alarmed through Dismissive)</li>
+              <li>Policy support and willingness to take political action</li>
+              <li>Year-over-year trends (2024 vs 2025)</li>
+              <li>Comparisons across behaviors or demographic groups</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggested questions -->
+      <div id="suggestions" class="suggestions">
+        <button class="suggestion-chip" data-question="What percentage of Americans have adopted solar panels?">What % have adopted solar panels?</button>
+        <button class="suggestion-chip" data-question="How has food waste reduction adoption changed from 2024 to 2025?">Food waste trends 2024 vs 2025</button>
+        <button class="suggestion-chip" data-question="Compare policy support across all 7 behaviors">Compare policy support across behaviors</button>
+        <button class="suggestion-chip" data-question="How do Democrats and Republicans differ on EV adoption and policy support?">Democrats vs Republicans on EVs</button>
+        <button class="suggestion-chip" data-question="What do Alarmed vs Dismissive segments think about eating less beef?">Alarmed vs Dismissive on beef</button>
+        <button class="suggestion-chip" data-question="Which behavior has the highest self-efficacy?">Highest self-efficacy behavior?</button>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <div class="input-wrapper">
+        <textarea id="user-input" placeholder="Ask about the Climate Culture Index..." rows="1"></textarea>
+        <button id="send-btn" class="send-btn" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="input-footer">
+        <span>Powered by Claude AI &middot; Data from Rare's Climate Culture Index 2025</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="app/claude-client.js"></script>
+  <script src="app/chart-renderer.js"></script>
+  <script src="app/app.js"></script>
+</body>
+</html>

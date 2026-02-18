@@ -1,0 +1,61 @@
+age_group,sex,race,pop_count,prop
+18-24,Male,White ,"78,377",0.030155253
+25-34,Male,White ,"186,619",0.071800951
+35-44,Male,White ,"177,135",0.068152018
+45-54,Male,White ,"146,092",0.056208342
+55+,Male,White ,"316,438",0.121748318
+18-24,Male,Black ,"8,772",0.003374994
+25-34,Male,Black ,"15,903",0.006118619
+35-44,Male,Black ,"14,945",0.005750032
+45-54,Male,Black ,"10,296",0.003961347
+55+,Male,Black ,"18,964",0.007296327
+18-24,Male,Asian ,"3,942",0.00151667
+25-34,Male,Asian ,"11,124",0.004279917
+35-44,Male,Asian ,"11,713",0.004506532
+45-54,Male,Asian ,"10,262",0.003948265
+55+,Male,Asian ,"12,851",0.004944373
+18-24,Male,Native_Hawaiian,293,0.000112731
+25-34,Male,Native_Hawaiian,411,0.000158131
+35-44,Male,Native_Hawaiian,"1,466",0.000564038
+45-54,Male,Native_Hawaiian,178,6.84848E-05
+55+,Male,Native_Hawaiian,638,0.000245468
+18-24,Male,American_Indian,1216,0.000467851
+25-34,Male,American_Indian,"4,020",0.00154668
+35-44,Male,American_Indian,"2,926",0.001125767
+45-54,Male,American_Indian,"1,999",0.000769108
+55+,Male,American_Indian,"3,361",0.001293132
+18-24,Male,Other,"41,321",0.015898098
+25-34,Male,Other,"62,513",0.024051639
+35-44,Male,Other,"60,298",0.023199426
+45-54,Male,Other,"48,061",0.018491287
+55+,Male,Other,"57,669",0.022187929
+18-24,Female,White ,"71,396",0.02746934
+25-34,Female,White ,"178,087",0.068518296
+35-44,Female,White ,"163,864",0.063046051
+45-54,Female,White ,"134,398",0.05170912
+55+,Female,White ,"349,451",0.134449944
+18-24,Female,Black ,"6,494",0.002498542
+25-34,Female,Black ,"12,086",0.004650043
+35-44,Female,Black ,"12,546",0.004827026
+45-54,Female,Black ,"10,337",0.003977121
+55+,Female,Black ,"19,416",0.007470232
+18-24,Female,Asian ,"5,539",0.002131109
+25-34,Female,Asian ,"14,049",0.005405299
+35-44,Female,Asian ,"13,756",0.005292569
+45-54,Female,Asian ,"11,502",0.004425351
+55+,Female,Asian ,"17,887",0.006881955
+18-24,Female,Native_Hawaiian,641,0.000246622
+25-34,Female,Native_Hawaiian,244,9.38781E-05
+35-44,Female,Native_Hawaiian,291,0.000111961
+45-54,Female,Native_Hawaiian,43,1.65441E-05
+55+,Female,Native_Hawaiian,0,0
+18-24,Female,American_Indian,"1,667",0.000641372
+25-34,Female,American_Indian,"2,299",0.000884532
+35-44,Female,American_Indian,"3,518",0.001353537
+45-54,Female,American_Indian,"1,874",0.000721014
+55+,Female,American_Indian,"4,329",0.001665566
+18-24,Female,Other,"37,110",0.014277931
+25-34,Female,Other,"58,325",0.022440322
+35-44,Female,Other,"51,759",0.019914078
+45-54,Female,Other,"43,991",0.01692537
+55+,Female,Other,"62,414",0.024013549

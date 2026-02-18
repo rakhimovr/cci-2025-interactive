@@ -1,0 +1,1419 @@
+---
+title: "Climate Culture Index 2025"
+subtitle: "Rare"
+output:
+  html_document:
+    theme: flatly
+    highlight: espresso
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    toc_depth: 3
+    code_folding: hide
+    number_sections: false
+    self_contained: true
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+---
+
+<style type="text/css">
+/* Main container width — use div.main-container to override TOC float styles */
+div.main-container {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Better typography */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+h1, h2, h3, h4 {
+  color: #2c3e50;
+  margin-top: 1.5em;
+}
+
+h1.title {
+  font-size: 2.5em;
+  font-weight: 700;
+  color: #008542;
+  border-bottom: 3px solid #008542;
+  padding-bottom: 0.3em;
+}
+
+h3.subtitle {
+  color: #666;
+  font-weight: 400;
+  margin-top: -0.5em;
+}
+
+/* Section headers */
+h2 {
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.3em;
+}
+
+h3 {
+  color: #34495e;
+}
+
+/* Collapsible details styling */
+details {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1em;
+  margin: 1em 0;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+  padding: 0.5em;
+}
+
+details summary:hover {
+  color: #008542;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+/* Behavior cards styling */
+.behavior-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 10px;
+  padding: 1.5em;
+  margin: 1em 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-left: 4px solid #008542;
+}
+
+/* Table improvements */
+.reactable {
+  font-size: 13px;
+}
+
+/* Key findings box */
+.key-finding {
+  background-color: #e8f5e9;
+  border-left: 4px solid #008542;
+  padding: 1em 1.5em;
+  margin: 1em 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.key-finding h4 {
+  color: #008542;
+  margin-top: 0;
+}
+
+/* Plot containers */
+.plotly-container {
+  margin: 1.5em 0;
+}
+
+/* Tab styling improvements */
+.nav-tabs > li > a {
+  color: #555;
+  font-weight: 500;
+}
+
+.nav-tabs > li.active > a {
+  color: #008542;
+  border-bottom: 2px solid #008542;
+}
+
+/* Better code block styling */
+pre {
+  background-color: #f4f4f4;
+  border-radius: 5px;
+}
+
+/* Footer */
+.footer-note {
+  text-align: center;
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 3em;
+  padding-top: 1em;
+  border-top: 1px solid #e0e0e0;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  fig.align = 'center'
+)
+
+# Set working directory
+setwd("C:/Users/RakhimRakhimov/Documents/GitHub/cci-2025-interactive")
+```
+
+```{r load-packages, include=FALSE}
+# Core packages
+library(haven)
+library(tidyverse)
+library(survey)
+library(knitr)
+library(magrittr)
+library(readr)
+library(stringr)
+
+# Interactive visualization
+library(plotly)
+library(htmlwidgets)
+
+# Tables
+library(reactable)
+library(DT)
+library(kableExtra)
+
+# Plotting
+library(ggplot2)
+library(gridExtra)
+library(patchwork)
+library(ggtext)
+library(ggrepel)
+```
+
+```{r load-data, include=FALSE}
+source("source files 2025/load-data-2025.R")
+```
+
+```{r clean-data, include=FALSE}
+source("source files 2025/clean-data-2025.R")
+```
+
+```{r load-color, include=FALSE}
+source("source files/table-color.R")
+```
+
+```{r sassy-segment, include=FALSE}
+sassy <- read_csv("sassy_2025 Segmentation.csv")
+sassy <- sassy %>% select(RID, segment)
+data_2025 <- data_2025 %>% left_join(sassy, by = "RID")
+```
+
+```{r us-only, include=FALSE}
+# Remove non-US specific objects and columns
+rm(hist_data, lucid_2025, p, plot_data, sassy, survey_2025_full)
+
+# Drop Boston and Denver specific columns
+drop_cols <- grep("boston|denver", colnames(data_2025), value = TRUE)
+data_2025 <- data_2025[, !(names(data_2025) %in% drop_cols)]
+data_2025 <- data_2025 %>% select(-Vrid, -Vcomment, -Vlanguage, -Vreferer, -Vsessionid, -Vuseragent, -ResponseStatus)
+```
+
+```{r weights, include=FALSE}
+source("source files 2025/national-weights.R")
+rm(age_sex_race, division, education, hispanic, income, political_view, sassy, state, state_division, svy.current, svy.final, svy.rake, svy.step1, svy.step2, svy.step3, svy.step4, wt)
+```
+
+```{r data-prep, include=FALSE}
+# Clean behavioral measures for 2025
+data_2025 %<>% mutate(
+  hp_adoption = as.numeric(hp_adoption),
+  hp_adoption = case_when(hp_adoption == 1 ~ 1, TRUE ~ 0),
+  community.solar_adoption = as.numeric(community.solar_adoption),
+  community.solar_adoption = case_when(community.solar_adoption == 1 ~ 1, TRUE ~ 0)
+) %>%
+  rename(fw_adoption = fw_attempt, beef_adoption = beef_attempt)
+
+# Create main index table
+index_2025 <- data_2025 %>%
+  select(
+    wt, RID,
+    # EVs
+    ev_ne_national, ev_adoption, ev_consider, ev_ee, ev_pnb, ev_intention,
+    ev_personal.benefit, ev_self.efficacy, ev_difficulty, ev_outcome.efficacy,
+    ev_policy.support, ev_policy.ee, ev_policy.info, ev_policy.contact,
+    # Solar
+    solar_adoption, solar_ne_national, solar_pnb, solar_ee, solar_consider,
+    solar_intention, solar_personal.benefit, solar_self.efficacy,
+    solar_difficulty, solar_outcome.efficacy, solar_policy.support,
+    solar_policy.ee, solar_policy.info, solar_policy.contact,
+    # Community solar
+    community.solar_adoption, community.solar_consider, community.solar_ee_national,
+    community.solar_pnb, community.solar_intention, community.solar_ne_national,
+    community.solar_personal.benefit, community.solar_self.efficacy,
+    community.solar_difficulty, community.solar_outcome.efficacy,
+    community.solar_policy.support, community.solar_policy.ee,
+    community.solar_policy.info, community.solar_policy.contact,
+    # Offsets
+    offset_adoption, offset_consider, offset_ee_national, offset_ne_national,
+    offset_intention, offset_pnb, offset_personal.benefit, offset_self.efficacy,
+    offset_difficulty, offset_outcome.efficacy, offset_policy.support,
+    offset_policy.ee, offset_policy.info, offset_policy.contact,
+    # Heat pump
+    hp_ne_national, hp_adoption, hp_consider, hp_ee_national, hp_pnb,
+    hp_intention, hp_personal.benefit, hp_self.efficacy, hp_difficulty,
+    hp_outcome.efficacy, hp_policy.support, hp_policy.ee, hp_policy.info,
+    hp_policy.contact,
+    # Beef
+    beef_adoption, beef_consider, beef_difficulty, beef_ee_national, beef_pnb,
+    beef_ne_national, beef_intention, beef_personal.benefit, beef_self.efficacy,
+    beef_outcome.efficacy, beef_policy.support, beef_policy.ee, beef_policy.info,
+    beef_policy.contact,
+    # Food waste
+    fw_adoption, fw_consider, fw_pnb, fw_ee_national, fw_ne_national,
+    fw_intention, fw_personal.benefit, fw_self.efficacy, fw_difficulty,
+    fw_outcome.efficacy, fw_policy.support, fw_policy.ee, fw_policy.info,
+    fw_policy.contact,
+    # Demographics
+    age_group, sex, race, HISPANIC, political_viewpoint_wvs, political_party, income
+  )
+
+# Clean behavioral variables
+index_2025 %<>% mutate(
+  ev_adoption = case_when(ev_adoption %in% 1:5 ~ 1, TRUE ~ 0),
+  ev_policy.support = case_when(ev_policy.support %in% c(3, 4) ~ 1, ev_policy.support %in% c(1, 2) ~ 0),
+  solar_policy.support = case_when(solar_policy.support %in% c(3, 4) ~ 1, solar_policy.support %in% c(1, 2) ~ 0),
+  community.solar_policy.support = case_when(community.solar_policy.support %in% c(3, 4) ~ 1, community.solar_policy.support %in% c(1, 2) ~ 0),
+  offset_policy.support = case_when(offset_policy.support %in% c(3, 4) ~ 1, offset_policy.support %in% c(1, 2) ~ 0),
+  hp_policy.support = case_when(hp_policy.support %in% c(3, 4) ~ 1, hp_policy.support %in% c(1, 2) ~ 0),
+  beef_policy.support = case_when(beef_policy.support %in% c(3, 4) ~ 1, beef_policy.support %in% c(1, 2) ~ 0),
+  fw_policy.support = case_when(fw_policy.support %in% c(3, 4) ~ 1, fw_policy.support %in% c(1, 2) ~ 0)
+)
+
+# Save demographics version for later analysis
+survey_2025_with_demos <- index_2025
+
+# Create clean survey dataset
+index_2025 <- index_2025 %>% select(RID, wt, ev_ne_national:fw_policy.contact)
+survey_2025 <- index_2025
+index_2025 <- mutate_all(index_2025, function(x) as.numeric(as.character(x)))
+```
+
+```{r table-prep, include=FALSE}
+# Pivot to long format
+index_long <- index_2025 %>%
+  pivot_longer(
+    cols = contains(c("intention", "ee", "pnb", "ne", "adoption", "consider",
+                      "personal.benefit", "self.efficacy", "outcome.efficacy",
+                      "difficulty", "policy.support", "policy.ee", "policy.info",
+                      "policy.contact")),
+    names_to = "indicator",
+    values_to = "value",
+    values_drop_na = TRUE
+  )
+
+index_long <- index_long %>% mutate(behavior = indicator)
+fin_table <- index_long %>%
+  mutate(behavior = sapply(strsplit(indicator, split = '_', fixed = TRUE), function(x) x[1]))
+
+fin_table <- fin_table %>%
+  mutate(ind = sapply(strsplit(indicator, split = '_', fixed = TRUE), function(x) x[2]))
+
+fin_table %<>% select(-RID, -indicator)
+
+t1 <- group_by(fin_table, behavior, ind)
+t1 <- summarise(t1, w.mean = weighted.mean(value, wt, na.rm = TRUE))
+t1 %<>% group_by(behavior) %>% pivot_wider(names_from = ind, values_from = w.mean)
+
+# Format values
+t1 <- t1 %>%
+  mutate(
+    adoption = adoption * 100,
+    consider = consider * 100,
+    ee = ee * 10,
+    ne = ne * 10,
+    pnb = pnb * 100,
+    personal.benefit = (personal.benefit - 1) / 4 * 100,
+    outcome.efficacy = (outcome.efficacy - 1) / 4 * 100,
+    self.efficacy = (self.efficacy - 1) / 4 * 100,
+    policy.contact = policy.contact * 100,
+    policy.info = policy.info * 100,
+    policy.support = policy.support * 100,
+    policy.ee = policy.ee * 10
+  )
+
+# Rename columns
+t1 <- t1 %>%
+  rename(
+    'Behavior' = behavior,
+    'Consideration' = consider,
+    'Adoption' = adoption,
+    'Intention' = intention,
+    'Belief that others are engaging in the behavior' = ee,
+    'Belief that others should engage in the behavior' = pnb,
+    'Belief that others think people should engage in the behavior' = ne,
+    'Self-efficacy' = self.efficacy,
+    'Outcome efficacy' = outcome.efficacy,
+    'Perceived personal benefit' = personal.benefit,
+    'Perceived ease of adoption' = difficulty,
+    'Policy support' = policy.support,
+    'Perceived policy support' = policy.ee,
+    'Openness to learn about the policy' = policy.info,
+    'Openness to contact a representative' = policy.contact
+  )
+
+# Rename behavior labels
+t1$Behavior[t1$Behavior == "ev"] <- "Drive an EV"
+t1$Behavior[t1$Behavior == "offset"] <- "Buy carbon offsets"
+t1$Behavior[t1$Behavior == "solar"] <- "Install solar panels"
+t1$Behavior[t1$Behavior == "beef"] <- "Eat less beef"
+t1$Behavior[t1$Behavior == "community.solar"] <- "Sign up for community solar"
+t1$Behavior[t1$Behavior == "fw"] <- "Reduce food waste"
+t1$Behavior[t1$Behavior == "hp"] <- "Install a heat pump"
+
+# Reorder columns
+t1 <- t1 %>% select(
+  Behavior, Consideration, Adoption, Intention,
+  `Belief that others are engaging in the behavior`,
+  `Belief that others should engage in the behavior`,
+  `Belief that others think people should engage in the behavior`,
+  `Self-efficacy`, `Outcome efficacy`,
+  `Perceived personal benefit`, `Perceived ease of adoption`,
+  `Policy support`, `Perceived policy support`,
+  `Openness to learn about the policy`, `Openness to contact a representative`
+)
+```
+
+```{r define-colors, include=FALSE}
+# Define consistent behavior colors used throughout
+behavior_colors <- c(
+  "Drive an EV" = "#005BBB",
+  "Buy carbon offsets" = "#5E6A71",
+  "Install solar panels" = "#F58233",
+  "Sign up for community solar" = "#008542",
+  "Install a heat pump" = "#7f5d90",
+  "Eat less beef" = "#AA1948",
+  "Reduce food waste" = "#884600"
+)
+
+# Behaviors mapping
+behaviors <- c(
+  "ev" = "Drive an EV",
+  "solar" = "Install solar panels",
+  "community.solar" = "Sign up for community solar",
+  "offset" = "Buy carbon offsets",
+  "hp" = "Install a heat pump",
+  "beef" = "Eat less beef",
+  "fw" = "Reduce food waste"
+)
+```
+
+## Overview {.tabset}
+
+### Background
+
+Understanding the public's opinions and beliefs towards climate change and climate action can inform the development of behavior-change campaigns and support tailored communication strategies. However, previous studies have mostly focused on examining trends in [climate policy support](https://climatecommunication.yale.edu/visualizations-data/americans-climate-views/), [risk perceptions](https://www.pewresearch.org/short-reads/2023/04/18/for-earth-day-key-facts-about-americans-views-of-climate-change-and-renewable-energy/), or [broad beliefs around climate change](https://news.gallup.com/poll/355427/americans-concerned-global-warming.aspx).
+
+The **Climate Culture Index (CCI)** fills this gap by tracking key indicators that were found to support behavior change for a set of high-impact climate-mitigating behaviors. The CCI is designed to measure changes in these indicators over time, helping us understand potential shifts in the American public's beliefs around climate behaviors.
+
+**Prior Studies:**
+
+- [Climate Culture Index, 2021](https://rakhimovr.github.io/cc-index-2021/index_external.html)
+- [Climate Culture IRA Index, 2023](https://climateculture.github.io/cc-ira-index-2023/cc-ira-index-2023.html)
+- [Climate Culture Index, 2023](https://climateculture.github.io/cc-index-2023/cc-index-2023.html)
+- [Climate Culture Index, 2024](https://rakhimovr.github.io/cci-24/cci-24.html)
+
+### Seven Climate Behaviors
+
+In this study, we measured beliefs and psycho-social states for the following seven high-impact behaviors:
+
+1. Eat less beef
+2. Reduce food waste
+3. Buy an Electric Vehicle (EV)
+4. Install solar panels
+5. Sign up for community solar
+6. Buy carbon offsets
+7. Install a heat pump
+
+The survey instrument is available [here](https://drive.google.com/file/d/13LRS4yGWrfPR4FUPrjyWwVI38b0WCVvu/view?usp=sharing).
+
+### Methodology
+
+In **August 2025**, we surveyed adults online from the United States (n = 1,828), quota-matched on demographic variables including age group, gender, and ethnicity.
+
+For the analyses, the national sample was weighted using survey weights to be representative of the US adult population in:
+
+- Age group x gender x ethnicity
+- Hispanic/non-Hispanic origin
+- Highest level of education completed
+- Annual household income before taxes
+- State population
+- Political viewpoint
+- Segments of Global Warming's Six Americas
+
+---
+
+## Climate Culture Index {.tabset}
+
+### Main Index Table
+
+The table below shows the weighted means for each psychosocial indicator across all seven behaviors. **Click on column headers to sort**.
+
+```{r main-table}
+reactable(
+  t1,
+  style = list(fontSize = "12px"),
+  defaultSortOrder = 'asc',
+  defaultSorted = 'Behavior',
+  showSortIcon = TRUE,
+  pagination = TRUE,
+  compact = TRUE,
+  borderless = FALSE,
+  striped = TRUE,
+  highlight = TRUE,
+  fullWidth = TRUE,
+  defaultColDef = colDef(minWidth = 60, align = "center", format = colFormat(digits = 1)),
+  theme = reactableTheme(
+    headerStyle = list(
+      "&:hover[aria-sort]" = list(background = "hsl(0, 0%, 96%)"),
+      "&[aria-sort='ascending'], &[aria-sort='descending']" = list(background = "hsl(0, 0%, 96%)"),
+      borderColor = "#555"
+    )
+  ),
+  columns = list(
+    Behavior = colDef(
+      align = "left",
+      minWidth = 140,
+      sticky = "left",
+      style = list(borderLeft = "1px solid #eee", fontWeight = "bold"),
+      headerStyle = list(borderLeft = "1px solid #eee")
+    ),
+    Adoption = colDef(
+      name = "Reported adoption (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$Adoption)) / (max(t1$Adoption) - min(t1$Adoption))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    Intention = colDef(
+      name = "Avg intention (0-100)",
+      style = function(value) {
+        normalized <- (value - min(t1$Intention)) / (max(t1$Intention) - min(t1$Intention))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Belief that others are engaging in the behavior` = colDef(
+      name = "Others adopted (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Belief that others are engaging in the behavior`)) /
+                      (max(t1$`Belief that others are engaging in the behavior`) - min(t1$`Belief that others are engaging in the behavior`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Belief that others should engage in the behavior` = colDef(
+      name = "Others should adopt (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Belief that others should engage in the behavior`)) /
+                      (max(t1$`Belief that others should engage in the behavior`) - min(t1$`Belief that others should engage in the behavior`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Belief that others think people should engage in the behavior` = colDef(
+      name = "Others think people should (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Belief that others think people should engage in the behavior`)) /
+                      (max(t1$`Belief that others think people should engage in the behavior`) - min(t1$`Belief that others think people should engage in the behavior`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Self-efficacy` = colDef(
+      style = function(value) {
+        normalized <- (value - min(t1$`Self-efficacy`)) / (max(t1$`Self-efficacy`) - min(t1$`Self-efficacy`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    Consideration = colDef(
+      name = "Consideration (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$Consideration)) / (max(t1$Consideration) - min(t1$Consideration))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Perceived personal benefit` = colDef(
+      name = "Personal benefit",
+      style = function(value) {
+        normalized <- (value - min(t1$`Perceived personal benefit`)) /
+                      (max(t1$`Perceived personal benefit`) - min(t1$`Perceived personal benefit`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Outcome efficacy` = colDef(
+      style = function(value) {
+        normalized <- (value - min(t1$`Outcome efficacy`)) / (max(t1$`Outcome efficacy`) - min(t1$`Outcome efficacy`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Perceived ease of adoption` = colDef(
+      name = "Difficulty (0-100)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Perceived ease of adoption`)) /
+                      (max(t1$`Perceived ease of adoption`) - min(t1$`Perceived ease of adoption`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Policy support` = colDef(
+      name = "Policy support (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Policy support`)) / (max(t1$`Policy support`) - min(t1$`Policy support`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Perceived policy support` = colDef(
+      name = "Perceived support (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Perceived policy support`)) /
+                      (max(t1$`Perceived policy support`) - min(t1$`Perceived policy support`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Openness to learn about the policy` = colDef(
+      name = "Learn about policy (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Openness to learn about the policy`)) /
+                      (max(t1$`Openness to learn about the policy`) - min(t1$`Openness to learn about the policy`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    ),
+    `Openness to contact a representative` = colDef(
+      name = "Contact rep (%)",
+      style = function(value) {
+        normalized <- (value - min(t1$`Openness to contact a representative`)) /
+                      (max(t1$`Openness to contact a representative`) - min(t1$`Openness to contact a representative`))
+        color <- good_color(normalized)
+        list(background = color)
+      }
+    )
+  ),
+  columnGroups = list(
+    colGroup(name = "Beliefs that...", columns = c(
+      "Belief that others are engaging in the behavior",
+      "Belief that others should engage in the behavior",
+      "Belief that others think people should engage in the behavior"
+    )),
+    colGroup(name = "Openness to...", columns = c(
+      "Openness to learn about the policy",
+      "Openness to contact a representative"
+    ))
+  )
+)
+```
+
+### Behavioral Measures
+
+<details>
+<summary><strong>Click to expand: Detailed measure descriptions</strong></summary>
+
+For the seven climate behaviors, we measured ten indicators identified as either important enablers or predictors of climate action:
+
+| Indicator | Description | Example Question |
+|-----------|-------------|------------------|
+| **Consideration** | Whether the person has considered adopting the behavior | *Before taking this survey, have you ever considered getting a fully electric car?* |
+| **Reported adoption** | Reported adoption of the behavior | *Does your household have solar panels installed?* |
+| **Reported intention** | Intention to perform the behavior in the near future | *How likely is it that you will limit your beef consumption in the next 12 months?* |
+| **Belief that others have adopted** | Perceived number of others that have adopted (empirical expectations) | *Imagine 10 households you know. How many do you think get their electricity from community solar?* |
+| **Belief that others should adopt** | Personal normative beliefs about adoption | *Do you think people should purchase carbon offsets because it is the right thing to do?* |
+| **Beliefs that others think people should adopt** | Normative expectations | *Imagine 10 people you know. How many think people should use an electric heat pump?* |
+| **Self-efficacy** | Belief in one's ability to adopt | *How confident are you in your ability to purchase and drive a fully electric car?* |
+| **Outcome efficacy** | Belief that adoption carries climate benefits | *How confident are you that driving an EV will reduce your carbon emissions?* |
+| **Personal benefit** | Stated personal benefit from adoption | *How much do you think limiting beef consumption would benefit you personally?* |
+| **Perceived ease of adoption** | Reported ease of adopting | *How difficult would it be for you to get electricity from community solar?* |
+
+</details>
+
+### Climate Policies
+
+For each behavior, we included 4 policy-related measures: **policy support, perceived policy support, openness to learn about the policy, and openness to contact a representative**.
+
+```{r policy-table}
+policy_table <- data.frame(
+  Behavior = c(
+    "Drive an EV",
+    "Install solar panels",
+    "Sign up for community solar",
+    "Buy carbon offsets",
+    "Install a heat pump",
+    "Eat less beef",
+    "Reduce food waste"
+  ),
+  `Policy Description` = c(
+    "Your state provides an upfront cash rebate for the purchase or lease of a fully electric vehicle",
+    "When solar panels produce more electricity than a home consumes, your utility offers to buy that excess electricity, lowering the homeowner's utility bill",
+    "Your utility guarantees households who sign up for community solar energy at least 5% savings on their annual electricity cost",
+    "The federal government requires all travel providers to offer customers an option to purchase carbon offsets",
+    "Your state provides an upfront cash rebate for the purchase of a heat pump",
+    "Your state increases the availability of vegetable and plant-based options in state-owned facilities",
+    "The federal government establishes a uniform food date labeling system to help consumers make accurate decisions about discarding food"
+  ),
+  check.names = FALSE
+)
+
+policy_table$Behavior <- paste0(
+  "<span style='color:", behavior_colors[policy_table$Behavior], "; font-weight: bold;'>",
+  policy_table$Behavior,
+  "</span>"
+)
+
+kable(policy_table,
+      caption = "Climate Policy Descriptions by Behavior",
+      format = "html",
+      escape = FALSE,
+      align = c("l", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = TRUE,
+                position = "left") %>%
+  column_spec(1, width = "25%") %>%
+  column_spec(2, width = "75%")
+```
+
+---
+
+## Trends in Psychosocial Indicators {.tabset}
+
+```{r trends-data-prep, include=FALSE}
+# Load historical data
+trends_2024 <- read.csv("trends_2024.csv")
+
+# Rename _national columns to match
+survey_2025_processed <- survey_2025
+national_cols <- grep("_national$", colnames(survey_2025_processed), value = TRUE)
+base_names <- gsub("_national$", "", national_cols)
+
+for (i in seq_along(national_cols)) {
+  old_name <- national_cols[i]
+  new_name <- base_names[i]
+  if (new_name %in% colnames(trends_2024)) {
+    colnames(survey_2025_processed)[colnames(survey_2025_processed) == old_name] <- new_name
+  }
+}
+
+# Get matching columns
+matching_cols <- intersect(colnames(trends_2024), colnames(survey_2025_processed))
+survey_2025_subset <- survey_2025_processed[, matching_cols, drop = FALSE]
+survey_2025_subset$wave <- 2025
+
+if (!"wave" %in% colnames(trends_2024)) {
+  trends_2024$wave <- 2024
+}
+
+# Combine datasets
+combined_df <- rbind(trends_2024, survey_2025_subset[, colnames(trends_2024)])
+combined_df <- mutate_all(combined_df, function(x) as.numeric(as.character(x)))
+
+# Prepare summary data
+behavior_mapping <- c(
+  "ev" = "Drive an EV", "solar" = "Install solar panels", "offset" = "Buy carbon offsets",
+  "community.solar" = "Sign up for community solar", "hp" = "Install a heat pump",
+  "beef" = "Eat less beef", "fw" = "Reduce food waste"
+)
+
+name_mapping <- c(
+  "adoption" = "Reported adoption", "consider" = "Consideration", "intention" = "Reported intention",
+  "ee" = "Empirical expectations", "pnb" = "Personal normative beliefs",
+  "ne" = "Normative expectations", "self.efficacy" = "Self-efficacy",
+  "personal.benefit" = "Personal benefit", "outcome.efficacy" = "Outcome efficacy",
+  "difficulty" = "Perceived difficulty",
+  "policy.support" = "Policy support", "policy.ee" = "Perceived policy support",
+  "policy.info" = "Openness to learn about policy", "policy.contact" = "Willingness to contact representative"
+)
+
+# Long format with labels
+long <- combined_df %>%
+  pivot_longer(cols = -c(RID, wave, wt),
+               names_to = c("behavior", "measure"),
+               names_pattern = "^(.+?)_(.+)$",
+               values_to = "value") %>%
+  mutate(
+    behavior_label = behavior_mapping[behavior],
+    measure_label = name_mapping[measure]
+  )
+
+df_summary <- long %>%
+  filter(!is.na(value)) %>%
+  group_by(wave, behavior, measure, behavior_label, measure_label) %>%
+  summarise(
+    n = n(),
+    mean = weighted.mean(value, w = wt, na.rm = TRUE),
+    weighted_var = sum(wt * (value - weighted.mean(value, w = wt, na.rm = TRUE))^2) / sum(wt),
+    weighted_sd = sqrt(weighted_var),
+    se = weighted_sd / sqrt(n()),
+    conf.low = mean - qt(0.975, df = n() - 1) * se,
+    conf.high = mean + qt(0.975, df = n() - 1) * se,
+    .groups = "drop"
+  )
+
+# Rescale measures
+df_summary <- df_summary %>%
+  mutate(
+    mean = ifelse(measure_label %in% c("Reported adoption", "Consideration", "Personal normative beliefs"),
+                  mean * 100, mean),
+    conf.low = ifelse(measure_label %in% c("Reported adoption", "Consideration", "Personal normative beliefs"),
+                      conf.low * 100, conf.low),
+    conf.high = ifelse(measure_label %in% c("Reported adoption", "Consideration", "Personal normative beliefs"),
+                       conf.high * 100, conf.high),
+    mean = ifelse(measure_label %in% c("Empirical expectations", "Normative expectations"), mean * 10, mean),
+    conf.low = ifelse(measure_label %in% c("Empirical expectations", "Normative expectations"), conf.low * 10, conf.low),
+    conf.high = ifelse(measure_label %in% c("Empirical expectations", "Normative expectations"), conf.high * 10, conf.high)
+  )
+
+measures_to_scale <- c("Self-efficacy", "Outcome efficacy", "Personal benefit")
+df_summary <- df_summary %>%
+  mutate(across(c(mean, conf.low, conf.high),
+                ~ if_else(measure_label %in% measures_to_scale, (. - 1) / 4 * 100, .)))
+```
+
+```{r create-interactive-plot-function, include=FALSE}
+# Function to create interactive plotly trend plots
+create_trend_plot <- function(data, measure_name, y_label = "%", title_suffix = "") {
+
+  plot_data <- data %>% filter(measure_label == measure_name)
+
+  if (nrow(plot_data) == 0) return(NULL)
+
+  # Create legend order based on 2025 values
+  legend_order <- plot_data %>%
+    filter(wave == 2025) %>%
+    arrange(desc(mean)) %>%
+    pull(behavior_label)
+
+  plot_data$behavior_label <- factor(plot_data$behavior_label, levels = legend_order)
+
+  p <- ggplot(plot_data, aes(x = factor(wave), y = mean,
+                              group = behavior_label, color = behavior_label)) +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                  width = 0.15, alpha = 0.5, position = position_dodge(width = 0.1)) +
+    geom_line(position = position_dodge(width = 0.1), linewidth = 0.8) +
+    geom_point(size = 2.5, position = position_dodge(width = 0.1), alpha = 0.8) +
+    scale_color_manual(values = behavior_colors) +
+    scale_x_discrete(labels = c("2024", "2025")) +
+    labs(
+      title = paste0(measure_name, title_suffix),
+      subtitle = paste0("% of U.S. adults, weighted estimates with 95% CIs"),
+      x = "", y = y_label, color = "Behavior",
+      caption = "Source: Climate Culture Index, Rare, 2025"
+    ) +
+    theme_minimal() +
+    theme(
+      text = element_text(family = "sans"),
+      legend.position = "bottom",
+      legend.title = element_blank(),
+      plot.title = element_text(size = 12, face = "bold"),
+      plot.subtitle = element_text(size = 9, color = "grey50"),
+      axis.text = element_text(size = 9),
+      panel.grid.minor = element_blank()
+    ) +
+    guides(color = guide_legend(nrow = 2))
+
+  # Convert to plotly
+  ggplotly(p, tooltip = c("x", "y", "color")) %>%
+    layout(
+      legend = list(orientation = "h", y = -0.2),
+      margin = list(b = 100)
+    )
+}
+```
+
+### Consideration
+
+```{r plot-consideration}
+create_trend_plot(df_summary, "Consideration", y_label = "% who have considered")
+```
+
+### Reported Adoption
+
+```{r plot-adoption}
+create_trend_plot(df_summary, "Reported adoption", y_label = "% who have adopted")
+```
+
+### Reported Intention
+
+```{r plot-intention}
+create_trend_plot(df_summary, "Reported intention", y_label = "Average intention (0-100)")
+```
+
+### Empirical Expectations
+
+```{r plot-ee}
+create_trend_plot(df_summary, "Empirical expectations", y_label = "Perceived % of others who adopted")
+```
+
+### Personal Normative Beliefs
+
+```{r plot-pnb}
+create_trend_plot(df_summary, "Personal normative beliefs", y_label = "% who believe others should adopt")
+```
+
+### Normative Expectations
+
+```{r plot-ne}
+create_trend_plot(df_summary, "Normative expectations", y_label = "Perceived % who think people should adopt")
+```
+
+### Self-efficacy
+
+```{r plot-se}
+create_trend_plot(df_summary, "Self-efficacy", y_label = "Confidence in ability (0-100)")
+```
+
+### Personal Benefit
+
+```{r plot-pb}
+create_trend_plot(df_summary, "Personal benefit", y_label = "Perceived benefit (0-100)")
+```
+
+---
+
+## Trends in Policy Measures {.tabset}
+
+```{r policy-data-prep, include=FALSE}
+# Load 2024 data for policy analysis
+survey_2024 <- read_sav("data/2024/survey_2024.sav")
+
+# Helper function for consistent numeric conversion
+to_numeric_consistent <- function(df, cols) {
+  df %>%
+    mutate(across(all_of(cols), \(x) {
+      if (inherits(x, "haven_labelled")) {
+        as.numeric(haven::zap_labels(x))
+      } else if (is.numeric(x)) {
+        as.numeric(x)
+      } else if (is.character(x)) {
+        suppressWarnings(readr::parse_number(x))
+      } else if (is.factor(x)) {
+        lev <- levels(x)
+        nums <- suppressWarnings(as.numeric(lev))
+        if (!any(is.na(nums))) as.numeric(as.character(x)) else as.integer(x)
+      } else {
+        suppressWarnings(as.numeric(x))
+      }
+    }))
+}
+
+difficulty_cols <- c("ev_difficulty", "solar_difficulty", "community.solar_difficulty",
+                     "offset_difficulty", "hp_difficulty", "beef_difficulty", "fw_difficulty")
+
+survey_2024_fix <- survey_2024 %>% to_numeric_consistent(difficulty_cols) %>% mutate(wave = 2024)
+survey_2025_fix <- survey_2025 %>% to_numeric_consistent(difficulty_cols) %>% mutate(wave = 2025)
+
+common <- intersect(names(survey_2024_fix), names(survey_2025_fix))
+survey_24_25 <- rbind(survey_2024_fix[common], survey_2025_fix[common])
+```
+
+### Policy Support
+
+```{r policy-support-plot}
+policy_support_estimates <- survey_24_25 %>%
+  select(wave, wt, ends_with("_policy.support")) %>%
+  pivot_longer(cols = ends_with("_policy.support"), names_to = "behavior_var", values_to = "policy_support") %>%
+  mutate(behavior_var = str_remove(behavior_var, "_policy\\.support"),
+         behavior_label = unname(behaviors[behavior_var])) %>%
+  filter(!is.na(policy_support), !is.na(wt), !is.na(behavior_label)) %>%
+  group_by(behavior_label, wave) %>%
+  summarise(
+    mean = weighted.mean(policy_support, wt, na.rm = TRUE) * 100,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+legend_order <- policy_support_estimates %>% filter(wave == 2025) %>% arrange(desc(mean)) %>% pull(behavior_label)
+policy_support_estimates$behavior_label <- factor(policy_support_estimates$behavior_label, levels = legend_order)
+
+p <- ggplot(policy_support_estimates, aes(x = factor(wave), y = mean, group = behavior_label, color = behavior_label)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.15, alpha = 0.5) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = behavior_colors) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(55, 95)) +
+  labs(title = "U.S. adult support for climate policies",
+       subtitle = "% of U.S. adults who say they support policies to promote climate actions",
+       x = "", y = "", color = "",
+       caption = "Source: Climate Culture Index, Rare, 2025") +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(face = "bold")) +
+  guides(color = guide_legend(nrow = 2))
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>% layout(legend = list(orientation = "h", y = -0.2))
+```
+
+### Openness to Learn About Policy
+
+```{r policy-info-plot}
+policy_info_estimates <- survey_24_25 %>%
+  select(wave, wt, ends_with("_policy.info")) %>%
+  pivot_longer(cols = ends_with("_policy.info"), names_to = "behavior_var", values_to = "policy_info") %>%
+  mutate(behavior_var = str_remove(behavior_var, "_policy\\.info"),
+         behavior_label = unname(behaviors[behavior_var])) %>%
+  filter(!is.na(policy_info), !is.na(wt), !is.na(behavior_label)) %>%
+  group_by(behavior_label, wave) %>%
+  summarise(
+    mean = weighted.mean(policy_info, wt, na.rm = TRUE) * 100,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+legend_order <- policy_info_estimates %>% filter(wave == 2025) %>% arrange(desc(mean)) %>% pull(behavior_label)
+policy_info_estimates$behavior_label <- factor(policy_info_estimates$behavior_label, levels = legend_order)
+
+p <- ggplot(policy_info_estimates, aes(x = factor(wave), y = mean, group = behavior_label, color = behavior_label)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.15, alpha = 0.5) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = behavior_colors) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(10, 30)) +
+  labs(title = "U.S. adult openness to learn about climate policies",
+       subtitle = "% of U.S. adults interested in learning about policies to promote climate actions",
+       x = "", y = "", color = "",
+       caption = "Source: Climate Culture Index, Rare, 2025") +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(face = "bold")) +
+  guides(color = guide_legend(nrow = 2))
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>% layout(legend = list(orientation = "h", y = -0.2))
+```
+
+### Willingness to Contact Representative
+
+```{r policy-contact-plot}
+policy_contact_estimates <- survey_24_25 %>%
+  select(wave, wt, ends_with("_policy.contact")) %>%
+  pivot_longer(cols = ends_with("_policy.contact"), names_to = "behavior_var", values_to = "policy_contact") %>%
+  mutate(behavior_var = str_remove(behavior_var, "_policy\\.contact"),
+         behavior_label = unname(behaviors[behavior_var])) %>%
+  filter(!is.na(policy_contact), !is.na(wt), !is.na(behavior_label)) %>%
+  group_by(behavior_label, wave) %>%
+  summarise(
+    mean = weighted.mean(policy_contact, wt, na.rm = TRUE) * 100,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+legend_order <- policy_contact_estimates %>% filter(wave == 2025) %>% arrange(desc(mean)) %>% pull(behavior_label)
+policy_contact_estimates$behavior_label <- factor(policy_contact_estimates$behavior_label, levels = legend_order)
+
+p <- ggplot(policy_contact_estimates, aes(x = factor(wave), y = mean, group = behavior_label, color = behavior_label)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.15, alpha = 0.5) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = behavior_colors) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(5, 22)) +
+  labs(title = "U.S. adult willingness to contact representatives",
+       subtitle = "% willing to contact representatives to express support for climate policies",
+       x = "", y = "", color = "",
+       caption = "Source: Climate Culture Index, Rare, 2025") +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(face = "bold")) +
+  guides(color = guide_legend(nrow = 2))
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>% layout(legend = list(orientation = "h", y = -0.2))
+```
+
+### Perceived Policy Support
+
+```{r policy-ee-plot}
+policy_ee_estimates <- survey_24_25 %>%
+  select(wave, wt, ends_with("_policy.ee")) %>%
+  pivot_longer(cols = ends_with("_policy.ee"), names_to = "behavior_var", values_to = "policy_ee") %>%
+  mutate(behavior_var = str_remove(behavior_var, "_policy\\.ee"),
+         behavior_label = unname(behaviors[behavior_var])) %>%
+  filter(!is.na(policy_ee), !is.na(wt), !is.na(behavior_label)) %>%
+  group_by(behavior_label, wave) %>%
+  summarise(
+    mean = weighted.mean(policy_ee, wt, na.rm = TRUE) * 10,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+legend_order <- policy_ee_estimates %>% filter(wave == 2025) %>% arrange(desc(mean)) %>% pull(behavior_label)
+policy_ee_estimates$behavior_label <- factor(policy_ee_estimates$behavior_label, levels = legend_order)
+
+p <- ggplot(policy_ee_estimates, aes(x = factor(wave), y = mean, group = behavior_label, color = behavior_label)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.15, alpha = 0.5) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = behavior_colors) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(25, 65)) +
+  labs(title = "U.S. adult perceptions of policy support",
+       subtitle = "% of U.S. adults believed to support policies to promote climate actions",
+       x = "", y = "", color = "",
+       caption = "Source: Climate Culture Index, Rare, 2025") +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(face = "bold")) +
+  guides(color = guide_legend(nrow = 2))
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>% layout(legend = list(orientation = "h", y = -0.2))
+```
+
+---
+
+## Policy Support Gap
+
+The following chart shows the gap between **perceived policy support** (what people think others believe) and **actual policy support** (what people actually believe).
+
+```{r policy-gap-plot, fig.height=7}
+# Prepare data for policy support gap
+gap_data <- t1 %>%
+  select(Behavior, `Policy support`, `Perceived policy support`) %>%
+  mutate(gap = `Policy support` - `Perceived policy support`)
+
+p <- ggplot(gap_data) +
+  geom_segment(aes(x = reorder(Behavior, `Policy support`), xend = Behavior,
+                   y = `Perceived policy support`, yend = `Policy support`),
+               color = "grey70", linewidth = 3, alpha = 0.6) +
+  geom_point(aes(x = Behavior, y = `Perceived policy support`,
+                 color = "Perceived % supporting"), size = 5) +
+  geom_point(aes(x = Behavior, y = `Policy support`,
+                 color = "Actual % supporting"), size = 5) +
+  coord_flip() +
+  scale_color_manual(values = c("Actual % supporting" = "#008542",
+                                "Perceived % supporting" = "#F58233")) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(0, 100)) +
+  labs(
+    title = "Climate Policy Support Gap",
+    subtitle = "Comparison of actual vs. perceived policy support among U.S. adults",
+    x = "", y = "% of U.S. adults",
+    color = "",
+    caption = "Source: Climate Culture Index, Rare, 2025"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 11, color = "grey50"),
+    axis.text.y = element_text(size = 11),
+    panel.grid.major.y = element_blank()
+  )
+
+ggplotly(p, tooltip = c("y", "color")) %>%
+  layout(legend = list(orientation = "h", y = 1.1))
+```
+
+---
+
+## Political Party Analysis {.tabset}
+
+This section examines how policy support and willingness to contact representatives varies by political party affiliation.
+
+```{r party-data-prep, include=FALSE}
+# Load 2024 SPSS data to get political party information
+spss_2024 <- read_sav("data/2024/spss_2024.sav")
+
+# Extract party info from 2024
+party_viewpoint_2024 <- spss_2024 %>%
+  select(RID, political_party, political_viewpoint_wvs)
+
+# Clean and merge 2024 data
+survey_2024_clean <- survey_2024_fix %>%
+  select(-any_of(c("political_party", "political_viewpoint_wvs")))
+survey_2024_with_party <- survey_2024_clean %>%
+  left_join(party_viewpoint_2024, by = "RID")
+
+# Extract party info from 2025
+party_viewpoint_2025 <- survey_2025_with_demos %>%
+  select(RID, political_party, political_viewpoint_wvs)
+
+survey_2025_clean <- survey_2025_fix %>%
+  select(-any_of(c("political_party", "political_viewpoint_wvs")))
+survey_2025_with_party <- survey_2025_clean %>%
+  left_join(party_viewpoint_2025, by = "RID")
+
+# Combine both years
+common_cols <- intersect(names(survey_2024_with_party), names(survey_2025_with_party))
+survey_24_25_with_party <- rbind(
+  survey_2024_with_party %>% select(all_of(common_cols)),
+  survey_2025_with_party %>% select(all_of(common_cols))
+)
+
+# Define party colors
+party_colors <- c(
+  "Democrats" = "#0044c9",
+  "Republicans" = "#da1333",
+  "Independent/Other" = "#F18F01",
+  "No Party Affiliation" = "grey50"
+)
+
+# Helper function for binary conversion
+to01 <- function(x, treat_1to4_as_binary = FALSE) {
+  if (is.factor(x)) x <- as.character(x)
+  if (is.logical(x)) return(as.numeric(x))
+  if (is.character(x)) {
+    xl <- tolower(x)
+    return(ifelse(xl %in% c("yes","y","support","supported","agree","true","1"), 1,
+           ifelse(xl %in% c("no","n","oppose","opposed","disagree","false","0"), 0,
+           suppressWarnings(as.numeric(x)))))
+  }
+  if (is.numeric(x)) {
+    ux <- unique(x[!is.na(x)])
+    if (treat_1to4_as_binary && length(ux) > 0 && all(ux %in% 1:4))
+      return(ifelse(x %in% c(3,4), 1, ifelse(x %in% c(1,2), 0, NA_real_)))
+    if (length(ux) > 0 && all(ux %in% c(0,1))) return(x)
+    if (length(ux) > 0 && all(ux %in% c(1,2))) return(ifelse(x == 2, 1, 0))
+    return(x)
+  }
+  suppressWarnings(as.numeric(x))
+}
+```
+
+### Contact by Party (2-Group)
+
+```{r contact-by-party-2group, fig.height=8}
+# Prepare data with 2-group party classification
+wide_df_party <- survey_24_25_with_party %>%
+  mutate(
+    row_id = row_number(),
+    party_group = case_when(
+      political_party %in% c(12503, 12504) ~ "Democrats",
+      political_party %in% c(12505, 12506) ~ "Republicans",
+      political_party == 12507 ~ "Independent/Other",
+      political_party == 12618 ~ "No Party Affiliation",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(row_id, wave, wt, party_group, matches("_policy\\.contact$")) %>%
+  filter(!is.na(party_group))
+
+long_df_party <- wide_df_party %>%
+  pivot_longer(
+    cols = matches("_policy\\.contact$"),
+    names_to = "behavior_var",
+    names_pattern = "^(.+)_policy\\.contact$",
+    values_to = "contact"
+  ) %>%
+  mutate(
+    behavior_label = behaviors[behavior_var],
+    contact01 = to01(contact, treat_1to4_as_binary = FALSE)
+  ) %>%
+  filter(!is.na(behavior_label), !is.na(contact01), !is.na(wt), !is.na(wave), !is.na(party_group))
+
+# Calculate estimates
+contact_est_party <- long_df_party %>%
+  group_by(behavior_label, wave, party_group) %>%
+  summarise(
+    mean = weighted.mean(contact01, wt, na.rm = TRUE) * 100,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+# Create faceted plot
+p <- ggplot(contact_est_party,
+            aes(x = factor(wave), y = mean, group = party_group,
+                color = party_group, shape = party_group)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2, alpha = 0.5) +
+  geom_line(aes(linetype = party_group)) +
+  geom_point(size = 2.5, alpha = 0.9) +
+  facet_wrap(~ behavior_label, ncol = 2, scales = "free_y") +
+  scale_color_manual(values = party_colors, name = "Political Party") +
+  scale_linetype_manual(values = c("Democrats" = "solid", "Republicans" = "solid",
+                                   "Independent/Other" = "dashed", "No Party Affiliation" = "dotted"),
+                        name = "Political Party") +
+  scale_shape_manual(values = c("Democrats" = 16, "Republicans" = 17,
+                                "Independent/Other" = 15, "No Party Affiliation" = 18),
+                     name = "Political Party") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(0, NA)) +
+  labs(
+    title = "Willingness to Contact Representatives by Political Party",
+    subtitle = "% of U.S. adults willing to contact representatives by party affiliation",
+    x = "", y = "",
+    caption = "Source: Climate Culture Index, Rare, 2025"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold"),
+    panel.spacing = unit(1, "lines")
+  ) +
+  guides(color = guide_legend(nrow = 1), linetype = guide_legend(nrow = 1), shape = guide_legend(nrow = 1))
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>%
+  layout(legend = list(orientation = "h", y = -0.15))
+```
+
+### Policy Support by Party
+
+```{r support-by-party, fig.height=8}
+# Prepare support data
+wide_df_support <- survey_24_25_with_party %>%
+  mutate(
+    row_id = row_number(),
+    party_group = case_when(
+      political_party %in% c(12503, 12504) ~ "Democrats",
+      political_party %in% c(12505, 12506) ~ "Republicans",
+      political_party == 12507 ~ "Independent/Other",
+      political_party == 12618 ~ "No Party Affiliation",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(row_id, wave, wt, party_group, matches("_policy\\.support$")) %>%
+  filter(!is.na(party_group))
+
+long_df_support <- wide_df_support %>%
+  pivot_longer(
+    cols = matches("_policy\\.support$"),
+    names_to = "behavior_var",
+    names_pattern = "^(.+)_policy\\.support$",
+    values_to = "support"
+  ) %>%
+  mutate(
+    behavior_label = behaviors[behavior_var],
+    support01 = to01(support, treat_1to4_as_binary = TRUE)
+  ) %>%
+  filter(!is.na(behavior_label), !is.na(support01), !is.na(wt), !is.na(wave), !is.na(party_group))
+
+# Calculate estimates
+support_est_party <- long_df_support %>%
+  group_by(behavior_label, wave, party_group) %>%
+  summarise(
+    mean = weighted.mean(support01, wt, na.rm = TRUE) * 100,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+# Create faceted plot
+p <- ggplot(support_est_party,
+            aes(x = factor(wave), y = mean, group = party_group,
+                color = party_group, shape = party_group)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2, alpha = 0.5) +
+  geom_line(aes(linetype = party_group)) +
+  geom_point(size = 2.5, alpha = 0.9) +
+  facet_wrap(~ behavior_label, ncol = 2, scales = "free_y") +
+  scale_color_manual(values = party_colors, name = "Political Party") +
+  scale_linetype_manual(values = c("Democrats" = "solid", "Republicans" = "solid",
+                                   "Independent/Other" = "dashed", "No Party Affiliation" = "dotted"),
+                        name = "Political Party") +
+  scale_shape_manual(values = c("Democrats" = 16, "Republicans" = 17,
+                                "Independent/Other" = 15, "No Party Affiliation" = 18),
+                     name = "Political Party") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(0, 100)) +
+  labs(
+    title = "Policy Support by Political Party",
+    subtitle = "% of U.S. adults who support climate policies by party affiliation",
+    x = "", y = "",
+    caption = "Source: Climate Culture Index, Rare, 2025"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold"),
+    panel.spacing = unit(1, "lines")
+  ) +
+  guides(color = guide_legend(nrow = 1), linetype = guide_legend(nrow = 1), shape = guide_legend(nrow = 1))
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>%
+  layout(legend = list(orientation = "h", y = -0.15))
+```
+
+### Contact by Support Status
+
+This analysis examines willingness to contact representatives among those who **support** vs. **do not support** each policy.
+
+```{r contact-by-support-status, fig.height=10}
+# Prepare data with support status
+wide_df_combined <- survey_24_25_with_party %>%
+  mutate(row_id = row_number()) %>%
+  select(row_id, wave, wt, matches("_policy\\.(support|contact)$"))
+
+long_df_combined <- wide_df_combined %>%
+  pivot_longer(
+    cols = matches("_policy\\.(support|contact)$"),
+    names_to = c("behavior_var", "measure"),
+    names_pattern = "^(.+)_policy\\.(support|contact)$",
+    values_to = "value"
+  ) %>%
+  pivot_wider(names_from = measure, values_from = value) %>%
+  mutate(
+    behavior_label = behaviors[behavior_var],
+    support01 = to01(support, treat_1to4_as_binary = TRUE),
+    contact01 = to01(contact, treat_1to4_as_binary = FALSE),
+    support_label = ifelse(support01 == 1, "Supporters", "Non-supporters")
+  ) %>%
+  filter(!is.na(behavior_label), !is.na(contact01), !is.na(support01), !is.na(wt), !is.na(wave))
+
+# Calculate estimates
+contact_by_support <- long_df_combined %>%
+  group_by(behavior_label, wave, support_label) %>%
+  summarise(
+    mean = weighted.mean(contact01, wt, na.rm = TRUE) * 100,
+    n = n(),
+    se = sqrt((mean/100) * (1 - mean/100) / n) * 100,
+    conf.low = pmax(0, mean - 1.96 * se),
+    conf.high = pmin(100, mean + 1.96 * se),
+    .groups = "drop"
+  )
+
+# Create faceted plot
+support_colors <- c("Supporters" = "#008542", "Non-supporters" = "#AA1948")
+
+p <- ggplot(contact_by_support,
+            aes(x = factor(wave), y = mean, group = support_label,
+                color = support_label, linetype = support_label)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.15, alpha = 0.6, linetype = "solid") +
+  geom_line(linewidth = 1) +
+  geom_point(size = 3, alpha = 0.95) +
+  facet_wrap(~ behavior_label, ncol = 2) +
+  scale_color_manual(values = support_colors, name = "Policy Support") +
+  scale_linetype_manual(values = c("Supporters" = "solid", "Non-supporters" = "dashed"),
+                        name = "Policy Support") +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), limits = c(0, 25)) +
+  labs(
+    title = "Willingness to Contact Representatives by Policy Support Status",
+    subtitle = "Supporters are more likely to contact representatives about climate policies",
+    x = "", y = "% Willing to Contact",
+    caption = "Source: Climate Culture Index, Rare, 2025"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold"),
+    strip.text = element_text(face = "bold"),
+    panel.spacing = unit(1.2, "lines")
+  )
+
+ggplotly(p, tooltip = c("x", "y", "color")) %>%
+  layout(legend = list(orientation = "h", y = -0.12))
+```
+
+---
+
+<div class="footer-note">
+<p><strong>Climate Culture Index 2025</strong> | Rare</p>
+<p>For more information, visit <a href="https://rare.org/climate-culture-index/">rare.org/climate-culture-index</a></p>
+</div>

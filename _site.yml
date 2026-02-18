@@ -1,0 +1,15 @@
+name: "Climate Culture Index 2025"
+navbar:
+  title: "Climate Culture Index 2025"
+  left:
+    - text: "Explorer"
+      href: index.html
+    - text: "Full Report"
+      href: cci-25-interactive.html
+output:
+  html_document:
+    theme: flatly
+    highlight: espresso
+    toc: true
+    toc_float: true
+output_dir: "."
